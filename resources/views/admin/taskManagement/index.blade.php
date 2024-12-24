@@ -1,7 +1,31 @@
 @extends('layouts.app')
 
 @section('content')
+    @if (session('success'))
+        <div id="successMessage" class="alert alert-success" style="display:none;">
+            {{ session('success') }}
+        </div>
+    @endif
     <h3 class="page-title">Tasks Management</h3>
+
+    <div class="d-flex justify-content-between mb-3">
+        <!-- Status Filter -->
+        <form method="GET" action="{{ route('tasks.index') }}" class="form-inline">
+            <div class="form-group mr-2">
+                <label for="statusFilter" class="mr-2">Status:</label>
+                <select name="status" id="statusFilter" class="form-control">
+                    <option value="">All</option>
+                    <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="In Progress" {{ request('status') === 'In Progress' ? 'selected' : '' }}>In Progress
+                    </option>
+                    <option value="Completed" {{ request('status') === 'Completed' ? 'selected' : '' }}>Completed</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success">Search</button>
+        </form>
+    </div>
+
+
     <p class="text-right">
         <button class="btn btn-success" data-toggle="modal" data-target="#taskModal">
             <i class="fa fa-plus"></i> Add New Task
@@ -31,26 +55,32 @@
                     @foreach ($tasks as $task)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
-                            <td>{{ $task->title }}</td>
-                            <td>{{ $task->description }}</td>
+                            <td style="text-align: left">{{ $task->title }}</td>
+                            <td style="text-align: left">{{ $task->description }}</td>
                             <td>{{ $task->due_date }}</td>
                             <td>{{ $task->user->name }}</td>
                             <td>
-                                @if ($task->status == 'Pending')
-                                    <span class="badge badge-warning status-badge" data-task-id="{{ $task->id }}"
-                                        data-current-status="{{ $task->status }}">{{ $task->status }}</span>
-                                @elseif($task->status == 'In Progress')
-                                    <span class="badge badge-info status-badge" data-task-id="{{ $task->id }}"
-                                        data-current-status="{{ $task->status }}">{{ $task->status }}</span>
-                                @else
-                                    <span class="badge badge-success status-badge" data-task-id="{{ $task->id }}"
-                                        data-current-status="{{ $task->status }}">{{ $task->status }}</span>
-                                @endif
+                                <span class="badge status-badge" id="status-id" data-task-id="{{ $task->id }}"
+                                    data-current-status="{{ $task->status }}"
+                                    style="background-color:
+                                        {{ $task->status === 'Completed' ? '#28a745' : ($task->status === 'In Progress' ? '#ffc107' : '#6c757d') }};">
+                                    {{ $task->status }}
+                                </span>
                             </td>
+
+
                             <td>
-                                <a href="{{ route('tasks.edit', $task) }}" class="btn btn-primary btn-sm" title="Edit">
+                                <button type="button" class="btn btn-primary btn-sm show-task" data-toggle="modal"
+                                    data-target="#taskDetailsModal" data-id="{{ $task->id }}" title="Show">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-primary btn-sm edit-task" data-toggle="modal"
+                                    data-target="#editTaskModal" data-id="{{ $task->id }}"
+                                    data-title="{{ $task->title }}" data-description="{{ $task->description }}"
+                                    data-due-date="{{ $task->due_date }}" data-user-id="{{ $task->user_id }}"
+                                    title="Edit">
                                     <i class="fa fa-edit"></i>
-                                </a>
+                                </button>
                                 <form action="{{ route('tasks.destroy', $task) }}" method="POST"
                                     style="display:inline-block;">
                                     @csrf
@@ -63,11 +93,12 @@
                         </tr>
                     @endforeach
                 </tbody>
+
             </table>
         </div>
     </div>
 
-    <!-- Modal for Adding Task -->
+    {{-- Modal for Adding Task --}}
     <div class="modal fade" id="taskModal" tabindex="-1" role="dialog" aria-labelledby="taskModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -113,7 +144,98 @@
         </div>
     </div>
 
-    <!-- Status Update Modal -->
+    {{-- Edit Task Modal --}}
+    <div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="editTaskForm" method="POST" action="{{ route('tasks.update', 'task_id') }}">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="editTaskTitle">Title</label>
+                            <input type="text" id="editTaskTitle" name="title" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editTaskDescription">Description</label>
+                            <textarea id="editTaskDescription" name="description" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="editTaskDueDate">Due Date</label>
+                            <input type="date" id="editTaskDueDate" name="due_date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editTaskUser">Assign User</label>
+                            <select id="editTaskUser" name="user_id" class="form-control" required>
+                                <option value="" disabled selected>Select User</option>
+                                @foreach ($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-success">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Task Details Modal --}}
+    <div class="modal fade" id="taskDetailsModal" tabindex="-1" role="dialog" aria-labelledby="taskDetailsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="taskDetailsModalLabel"><i class="fa fa-tasks"></i> Task Details</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label><strong>Title:</strong></label>
+                        <p>{{ $task->title }}</p>
+                    </div>
+                    <div class="form-group">
+                        <label><strong>Description:</strong></label>
+                        <p>{{ $task->description }}</p>
+                    </div>
+                    <div class="form-group">
+                        <label><strong>Due Date:</strong></label>
+                        <p>{{ $task->due_date }}</p>
+                    </div>
+                    <div class="form-group">
+                        <label><strong>Assigned User:</strong></label>
+                        <p>{{ $task->user->name }}</p>
+                    </div>
+                    <div class="form-group">
+                        <label><strong>Status:</strong></label>
+                        <span
+                            class="badge badge-{{ $task->status === 'Completed' ? 'success' : ($task->status === 'In Progress' ? 'warning' : 'secondary') }}">
+                            <i
+                                class="fa {{ $task->status === 'Completed' ? 'fa-check-circle' : ($task->status === 'In Progress' ? 'fa-spinner' : 'fa-hourglass-half') }}"></i>
+                            {{ $task->status }}
+                        </span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Status Update Modal --}}
     <div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -124,10 +246,10 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form id="statusUpdateForm" method="POST" action="{{ route('tasks.updateStatus') }}">
+                <form id="statusUpdateForm" method="POST" action="{{ route('tasks.status') }}">
                     @csrf
                     @method('PUT')
-                    <input type="hidden" name="task_id" id="task_id">
+                    <input type="hidden" id="task_id" name="task_id" value="">
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="status">Select Status</label>
@@ -146,19 +268,91 @@
             </div>
         </div>
     </div>
+
 @stop
 
 @section('javascript')
     <script>
+        @if (session('success'))
+            setTimeout(function() {
+                var successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+
+                setTimeout(function() {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            }, 100);
+        @endif
+
+
+        document.querySelectorAll('.edit-task').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var taskId = this.getAttribute('data-id');
+                var taskTitle = this.getAttribute('data-title');
+                var taskDescription = this.getAttribute('data-description');
+                var taskDueDate = this.getAttribute('data-due-date');
+                var userId = this.getAttribute('data-user-id');
+
+                document.getElementById('editTaskTitle').value = taskTitle;
+                document.getElementById('editTaskDescription').value = taskDescription;
+                document.getElementById('editTaskDueDate').value = taskDueDate;
+                document.getElementById('editTaskUser').value = userId;
+
+                document.getElementById('editTaskForm').action = '/tasks/' + taskId;
+            });
+        });
+
+        $(document).ready(function() {
+            $('.show-task').on('click', function() {
+                var taskId = $(this).data('id');
+                $.get('/tasks/' + taskId, function(data) {
+                    $('#taskDetailsModal .modal-body').html(data);
+                    $('#taskDetailsModal').modal('show');
+                });
+            });
+        });
+
+
         document.querySelectorAll('.status-badge').forEach(function(badge) {
             badge.addEventListener('click', function() {
                 var taskId = this.getAttribute('data-task-id');
                 var currentStatus = this.getAttribute('data-current-status');
-                document.getElementById('task_id').value = taskId;
 
-                document.getElementById('status').value = currentStatus;
+                var taskInput = document.getElementById('task_id');
+                var statusSelect = document.getElementById('status');
 
-                $('#statusModal').modal('show');
+                if (taskInput && statusSelect) {
+                    taskInput.value = taskId;
+                    statusSelect.value = currentStatus;
+                    $('#statusModal').modal('show');
+                }
+
+                updateStatusBadgeColor(taskId, currentStatus);
+            });
+        });
+
+        $('#statusUpdateForm').submit(function(e) {
+            e.preventDefault();
+
+            var taskId = $('#task_id').val();
+            console.log('task : ', taskId);
+             // Ensure task_id is properly captured
+            var newStatus = $('#status').val(); // Get selected status
+
+            $.ajax({
+                url: '/tasks/update-status', // Ensure the correct URL
+                method: 'PUT',
+                data: {
+                    _token: '{{ csrf_token() }}', // CSRF token for security
+                    task_id: taskId, // Add task_id to the request
+                    status: newStatus, // Add the selected status
+                },
+                success: function(response) {
+                    $('#statusModal').modal('hide');
+                },
+                error: function(xhr) {
+                    console.error('Error updating status:', xhr);
+                }
             });
         });
     </script>
@@ -166,20 +360,14 @@
 
 @section('styles')
     <style>
-        table th,
-        table td {
-            text-align: center;
-            background-color: #f5f5f5;
-            vertical-align: middle;
+        .status-badge {
+            cursor: pointer;
         }
 
         table th {
+            text-align: center;
             background-color: #007bff;
             color: white;
-        }
-
-        table td {
-            border-bottom: 1px solid #ddd;
         }
 
         .btn-sm {
