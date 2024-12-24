@@ -2,13 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
-        return "Hi SRS";
+        $users = User::all();
+        $tasks = auth()->user()->tasks()->get();
+        return view('admin.taskManagement.index', compact('tasks','users'));
     }
 
     public function create()
@@ -18,7 +26,7 @@ class TaskController extends Controller
 
     public function store(Request $request)
     {
-        //
+        dd($request->all());
     }
 
     public function show($id)
@@ -26,35 +34,16 @@ class TaskController extends Controller
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
         //

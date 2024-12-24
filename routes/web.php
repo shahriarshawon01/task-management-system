@@ -1,11 +1,16 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\ProfileController;
 
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::resource('tasks', TaskController::class);
 });
 
 Route::get('/dashboard', function () {

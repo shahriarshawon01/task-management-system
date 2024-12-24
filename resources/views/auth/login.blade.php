@@ -40,6 +40,16 @@
             @endif
         </div>
 
+        <!-- Register Link -->
+        <div class="mt-4 text-center">
+            <p class="text-sm text-gray-600">
+                Don't have an account? 
+                <a href="{{ route('register') }}" class="text-indigo-500 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    Create one here
+                </a>
+            </p>
+        </div>
+
         <!-- Login Button -->
         <div class="mt-6">
             <button type="submit"
