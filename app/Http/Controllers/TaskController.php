@@ -54,7 +54,7 @@ class TaskController extends Controller
 
     public function show($id)
     {
-        $task = Task::findOrFail($id);
+        $task = Task::find($id);
         return view('admin.taskManagement.show', compact('task'));
     }
 

@@ -68,12 +68,7 @@
                                 </span>
                             </td>
 
-
                             <td>
-                                <button type="button" class="btn btn-primary btn-sm show-task" data-toggle="modal"
-                                    data-target="#taskDetailsModal" data-id="{{ $task->id }}" title="Show">
-                                    <i class="fa fa-eye"></i>
-                                </button>
                                 <button type="button" class="btn btn-primary btn-sm edit-task" data-toggle="modal"
                                     data-target="#editTaskModal" data-id="{{ $task->id }}"
                                     data-title="{{ $task->title }}" data-description="{{ $task->description }}"
@@ -190,51 +185,6 @@
         </div>
     </div>
 
-    {{-- Task Details Modal --}}
-    <div class="modal fade" id="taskDetailsModal" tabindex="-1" role="dialog" aria-labelledby="taskDetailsModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="taskDetailsModalLabel"><i class="fa fa-tasks"></i> Task Details</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label><strong>Title:</strong></label>
-                        <p>{{ $task->title }}</p>
-                    </div>
-                    <div class="form-group">
-                        <label><strong>Description:</strong></label>
-                        <p>{{ $task->description }}</p>
-                    </div>
-                    <div class="form-group">
-                        <label><strong>Due Date:</strong></label>
-                        <p>{{ $task->due_date }}</p>
-                    </div>
-                    <div class="form-group">
-                        <label><strong>Assigned User:</strong></label>
-                        <p>{{ $task->user->name }}</p>
-                    </div>
-                    <div class="form-group">
-                        <label><strong>Status:</strong></label>
-                        <span
-                            class="badge badge-{{ $task->status === 'Completed' ? 'success' : ($task->status === 'In Progress' ? 'warning' : 'secondary') }}">
-                            <i
-                                class="fa {{ $task->status === 'Completed' ? 'fa-check-circle' : ($task->status === 'In Progress' ? 'fa-spinner' : 'fa-hourglass-half') }}"></i>
-                            {{ $task->status }}
-                        </span>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     {{-- Status Update Modal --}}
     <div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel"
         aria-hidden="true">
@@ -302,17 +252,6 @@
             });
         });
 
-        $(document).ready(function() {
-            $('.show-task').on('click', function() {
-                var taskId = $(this).data('id');
-                $.get('/tasks/' + taskId, function(data) {
-                    $('#taskDetailsModal .modal-body').html(data);
-                    $('#taskDetailsModal').modal('show');
-                });
-            });
-        });
-
-
         document.querySelectorAll('.status-badge').forEach(function(badge) {
             badge.addEventListener('click', function() {
                 var taskId = this.getAttribute('data-task-id');
@@ -336,7 +275,7 @@
 
             var taskId = $('#task_id').val();
             console.log('task : ', taskId);
-             // Ensure task_id is properly captured
+            // Ensure task_id is properly captured
             var newStatus = $('#status').val(); // Get selected status
 
             $.ajax({
