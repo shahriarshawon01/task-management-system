@@ -22,6 +22,7 @@
                         <th>Description</th>
                         <th>Due Date</th>
                         <th>User</th>
+                        <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -33,7 +34,19 @@
                             <td>{{ $task->title }}</td>
                             <td>{{ $task->description }}</td>
                             <td>{{ $task->due_date }}</td>
-                            <td>{{ $task->user->name }}</td> <!-- Show user's name -->
+                            <td>{{ $task->user->name }}</td>
+                            <td>
+                                @if ($task->status == 'Pending')
+                                    <span class="badge badge-warning status-badge" data-task-id="{{ $task->id }}"
+                                        data-current-status="{{ $task->status }}">{{ $task->status }}</span>
+                                @elseif($task->status == 'In Progress')
+                                    <span class="badge badge-info status-badge" data-task-id="{{ $task->id }}"
+                                        data-current-status="{{ $task->status }}">{{ $task->status }}</span>
+                                @else
+                                    <span class="badge badge-success status-badge" data-task-id="{{ $task->id }}"
+                                        data-current-status="{{ $task->status }}">{{ $task->status }}</span>
+                                @endif
+                            </td>
                             <td>
                                 <a href="{{ route('tasks.edit', $task) }}" class="btn btn-primary btn-sm" title="Edit">
                                     <i class="fa fa-edit"></i>
@@ -99,11 +112,55 @@
             </div>
         </div>
     </div>
+
+    <!-- Status Update Modal -->
+    <div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="statusModalLabel">Update Task Status</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="statusUpdateForm" method="POST" action="{{ route('tasks.updateStatus') }}">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="task_id" id="task_id">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="status">Select Status</label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="Pending">Pending</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Update Status</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('javascript')
     <script>
-        // You can add additional JS functionality if needed
+        document.querySelectorAll('.status-badge').forEach(function(badge) {
+            badge.addEventListener('click', function() {
+                var taskId = this.getAttribute('data-task-id');
+                var currentStatus = this.getAttribute('data-current-status');
+                document.getElementById('task_id').value = taskId;
+
+                document.getElementById('status').value = currentStatus;
+
+                $('#statusModal').modal('show');
+            });
+        });
     </script>
 @endsection
 

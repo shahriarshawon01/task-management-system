@@ -12,6 +12,8 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::resource('tasks', TaskController::class);
 });
+Route::put('/tasks/update-status', [TaskController::class, 'updateStatus'])->name('tasks.updateStatus');
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');

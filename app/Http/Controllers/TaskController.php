@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -16,7 +17,7 @@ class TaskController extends Controller
     {
         $users = User::all();
         $tasks = auth()->user()->tasks()->get();
-        return view('admin.taskManagement.index', compact('tasks','users'));
+        return view('admin.taskManagement.index', compact('tasks', 'users'));
     }
 
     public function create()
@@ -26,7 +27,14 @@ class TaskController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'due_date' => 'required|date',
+        ]);
+
+        auth()->user()->tasks()->create($request->all());
+        return redirect()->route('tasks.index');
     }
 
     public function show($id)
@@ -47,5 +55,17 @@ class TaskController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function updateStatus(Request $request)
+    {
+        $task = Task::find($request->task_id);
+        dd($task);
+        if ($task) {
+            $task->status = $request->status;
+            $task->save();
+        }
+
+        return redirect()->back()->with('success', 'Task status updated successfully.');
     }
 }
